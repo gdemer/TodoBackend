@@ -1,15 +1,14 @@
-# 1. Build Stage
-FROM library/dotnet-sdk:9.0 AS build-env
-WORKDIR /app
-COPY *.csproj ./
-RUN dotnet restore
-COPY . ./
-RUN dotnet publish -c Release -o out
+# 1. Build stage
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+COPY ["TodoBackend.csproj", "."]
+RUN dotnet restore "./TodoBackend.csproj"
+COPY . .
+RUN dotnet publish "TodoBackend.csproj" -c Release -o /app/publish --no-restore
 
-# 2. Runtime Stage
-FROM library/dotnet-aspnet:9.0
+# 2. Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
-COPY --from=build-env /app/out .
-ENV ASPNETCORE_URLS=http://+:80
-EXPOSE 80
-ENTRYPOINT ["dotnet", "TodoBackend.dll"]
+COPY --from=build /app/publish .
+EXPOSE 8080
+ENTRYPOINT ["sh", "-c", "dotnet TodoBackend.dll --urls http://0.0.0.0:${PORT:-8080}"]
