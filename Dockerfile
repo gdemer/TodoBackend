@@ -1,5 +1,5 @@
 # 1. Build stage
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+FROM ://microsoft.com AS build
 WORKDIR /src
 COPY ["TodoBackend.csproj", "."]
 RUN dotnet restore "./TodoBackend.csproj"
@@ -7,7 +7,7 @@ COPY . .
 RUN dotnet publish "TodoBackend.csproj" -c Release -o /app/publish
 
 # 2. Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS final
+FROM ://microsoft.com AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 ENV ASPNETCORE_URLS=http://+:80
