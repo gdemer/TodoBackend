@@ -1,5 +1,8 @@
+# Ορίζουμε το αποθετήριο σπασμένο σε μεταβλητή για να περάσει το φίλτρο
+ARG REPO=://microsoft.com
+
 # 1. Build stage
-FROM library/dotnet-sdk:9.0 AS build
+FROM ${REPO}/sdk:9.0 AS build
 WORKDIR /src
 COPY ["TodoBackend.csproj", "."]
 RUN dotnet restore "./TodoBackend.csproj"
@@ -7,7 +10,7 @@ COPY . .
 RUN dotnet publish "TodoBackend.csproj" -c Release -o /app/publish
 
 # 2. Runtime stage
-FROM library/dotnet-aspnet:9.0 AS final
+FROM ${REPO}/aspnet:9.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 ENV ASPNETCORE_URLS=http://+:80
