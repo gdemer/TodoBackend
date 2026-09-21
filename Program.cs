@@ -7,11 +7,34 @@ var builder = WebApplication.CreateBuilder(args);
 //    options.UseSqlite("Data Source=todos.db"));
 
 // Ρύθμιση για Cloud PostgreSQL (διαβάζει το Connection String από το Render)
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+//var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+//    ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+
+//builder.Services.AddDbContext<AppDbContext>(options =>
+//    options.UseNpgsql(connectionString)); // <-- Αλλαγή σε UseNpgsql
+
+// Δυναμική κατασκευή του Connection String από τις καθαρές μεταβλητές του Render
+var envHost = Environment.GetEnvironmentVariable("PGHOST");
+var envPort = Environment.GetEnvironmentVariable("PGPORT");
+var envUser = Environment.GetEnvironmentVariable("PGUSER");
+var envPass = Environment.GetEnvironmentVariable("PGPASSWORD");
+var envDb   = Environment.GetEnvironmentVariable("PGDATABASE");
+
+string connectionString;
+
+if (!string.IsNullOrEmpty(envHost))
+{
+    // Αν είμαστε στο Render, φτιάξε το string από τις αυτόνομες μεταβλητές
+    connectionString = $"Server={envHost};Port={envPort};User Id={envUser};Password={envPass};Database={envDb};Ssl Mode=Require;Trust Server Certificate=true;";
+}
+else
+{
+    // Αν είμαστε τοπικά, διάβασε το appsettings (ή βάλε ένα default fallback)
+    connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "";
+}
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString)); // <-- Αλλαγή σε UseNpgsql
+    options.UseNpgsql(connectionString));
 
 
 // 2. Ρύθμιση CORS για όλους τους browsers (Chrome & Brave)
