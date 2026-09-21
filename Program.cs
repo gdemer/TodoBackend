@@ -3,8 +3,16 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Ρύθμιση SQLite
+//builder.Services.AddDbContext<AppDbContext>(options =>
+//    options.UseSqlite("Data Source=todos.db"));
+
+// Ρύθμιση για Cloud PostgreSQL (διαβάζει το Connection String από το Render)
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=todos.db"));
+    options.UseNpgsql(connectionString)); // <-- Αλλαγή σε UseNpgsql
+
 
 // 2. Ρύθμιση CORS για όλους τους browsers (Chrome & Brave)
 builder.Services.AddCors(options =>
