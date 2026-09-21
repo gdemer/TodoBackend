@@ -1,13 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Προσθήκη των Controllers
-builder.Services.AddControllers();
-
-// 2. Δυναμική κατασκευή του Connection String από τις 5 αυτόνομες μεταβλητές του Render (PostgreSQL)
+// 1. Δυναμική κατασκευή του Connection String (PostgreSQL)
 var envHost = Environment.GetEnvironmentVariable("PGHOST");
 var envPort = Environment.GetEnvironmentVariable("PGPORT");
 var envUser = Environment.GetEnvironmentVariable("PGUSER");
@@ -18,19 +13,17 @@ string connectionString;
 
 if (!string.IsNullOrEmpty(envHost))
 {
-    // Αν είμαστε στο Render, κατασκευάζεται το string για την PostgreSQL
     connectionString = $"Server={envHost};Port={envPort};User Id={envUser};Password={envPass};Database={envDb};Ssl Mode=Require;Trust Server Certificate=true;";
 }
 else
 {
-    // Αν είμαστε τοπικά (Development fallback)
     connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "";
 }
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// 3. Ενεργοποίηση CORS για σύνδεση με τη React
+// 2. Ενεργοποίηση CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReact", policy =>
@@ -43,11 +36,52 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// 4. Ενεργοποίηση των απαραίτητων Middlewares
 app.UseCors("AllowReact");
-app.UseAuthorization();
 
-// 5. Χαρτογράφηση των Endpoints
-app.MapControllers();
+// ==========================================
+// 3. MINIMAL API ENDPOINTS (Αντικαθιστά τους Controllers)
+// ==========================================
+
+// GET: api/todos?username=Ntina
+app.MapGet("/api/todos", async (string username, AppDbContext db) =>
+{
+    if (string.IsNullOrEmpty(username)) return Results.BadRequest("Το username είναι υποχρεωτικό.");
+    var userTodos = await db.Todos.Where(t => t.Username == username).ToListAsync();
+    return Results.Ok(userTodos);
+});
+
+// POST: api/todos
+app.MapPost("/api/todos", async (Todo todo, AppDbContext db) =>
+{
+    db.Todos.Add(todo);
+    await db.SaveChangesAsync();
+    return Results.Ok(todo);
+});
+
+// PUT: api/todos/5
+app.MapPut("/api/todos/{id}", async (int id, Todo updatedTodo, AppDbContext db) =>
+{
+    var todo = await db.Todos.FindAsync(id);
+    if (todo == null) return Results.NotFound();
+
+    todo.Text = updatedTodo.Text;
+    todo.Completed = updatedTodo.Completed;
+    todo.DueDate = updatedTodo.DueDate;
+    todo.Priority = updatedTodo.Priority;
+
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
+
+// DELETE: api/todos/5
+app.MapDelete("/api/todos/{id}", async (int id, AppDbContext db) =>
+{
+    var todo = await db.Todos.FindAsync(id);
+    if (todo == null) return Results.NotFound();
+
+    db.Todos.Remove(todo);
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
 
 app.Run();
