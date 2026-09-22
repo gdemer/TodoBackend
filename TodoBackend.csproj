@@ -4,7 +4,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <!-- Επιτρέπουμε στο Render να προχωρήσει το build ακόμα κι αν υπάρχει προειδοποίηση για preview πακέτα -->
     <WarningsAsErrors></WarningsAsErrors>
   </PropertyGroup>
 

@@ -1,14 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using EFCore.NamingConventions; // <-- ΑΥΤΗ Η ΓΡΑΜΜΗ ΛΕΙΠΕΙ ΚΑΙ ΠΡΕΠΕΙ ΝΑ ΠΡΟΣΤΕΘΕΙ!
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Ενεργοποίηση Controllers / Minimal API υποδομής
 builder.Services.AddControllers();
 
-// 2. Δυναμική κατασκευή του Connection String (PostgreSQL)
+// 1. Δυναμική κατασκευή του Connection String (PostgreSQL)
 var envHost = Environment.GetEnvironmentVariable("PGHOST");
 var envPort = Environment.GetEnvironmentVariable("PGPORT");
 var envUser = Environment.GetEnvironmentVariable("PGUSER");
@@ -26,12 +24,10 @@ else
     connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "";
 }
 
-// Σύνδεση με PostgreSQL και αυτόματη μετατροπή ονομάτων σε snake_case
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString)
-           .UseSnakeCaseNamingConventions()); // <-- ΔΙΟΡΘΩΣΗ: Τώρα θα αναγνωριστεί κανονικά
+    options.UseNpgsql(connectionString));
 
-// 3. Ενεργοποίηση CORS
+// 2. Ενεργοποίηση CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReact", policy =>
@@ -47,7 +43,7 @@ var app = builder.Build();
 app.UseCors("AllowReact");
 
 // ==========================================
-// 4. MINIMAL API ENDPOINTS
+// 3. MINIMAL API ENDPOINTS
 // ==========================================
 
 // GET: api/todos?username=George
