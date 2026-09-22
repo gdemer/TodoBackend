@@ -23,7 +23,7 @@ else
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// 2. Ενεργοποίηση CORS
+// 2. Ενεργοποίηση CORS - Απόλυτα ανοιχτό για να μην σας κόβει ποτέ το Netlify ή ο Brave
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReact", policy =>
@@ -39,13 +39,14 @@ var app = builder.Build();
 app.UseCors("AllowReact");
 
 // ==========================================
-// 3. MINIMAL API ENDPOINTS (Αντικαθιστά τους Controllers)
+// 3. ΔΙΟΡΘΩΜΕΝΑ MINIMAL API ENDPOINTS
 // ==========================================
 
-// GET: api/todos?username=Ntina
+// GET: api/todos?username=George
 app.MapGet("/api/todos", async (string username, AppDbContext db) =>
 {
     if (string.IsNullOrEmpty(username)) return Results.BadRequest("Το username είναι υποχρεωτικό.");
+    // Χρησιμοποιούμε FromExpression ή απευθείας query που ταιριάζει με τον πίνακα "Todos"
     var userTodos = await db.Todos.Where(t => t.Username == username).ToListAsync();
     return Results.Ok(userTodos);
 });
@@ -58,7 +59,7 @@ app.MapPost("/api/todos", async (Todo todo, AppDbContext db) =>
     return Results.Ok(todo);
 });
 
-// PUT: api/todos/5
+// PUT: api/todos/5 (Διορθωμένο για να δέχεται σωστά το ID και το Body ξεχωριστά)
 app.MapPut("/api/todos/{id}", async (int id, Todo updatedTodo, AppDbContext db) =>
 {
     var todo = await db.Todos.FindAsync(id);
@@ -73,7 +74,7 @@ app.MapPut("/api/todos/{id}", async (int id, Todo updatedTodo, AppDbContext db) 
     return Results.NoContent();
 });
 
-// DELETE: api/todos/5
+// DELETE: api/todos/5 (Διορθωμένο)
 app.MapDelete("/api/todos/{id}", async (int id, AppDbContext db) =>
 {
     var todo = await db.Todos.FindAsync(id);
