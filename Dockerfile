@@ -10,5 +10,5 @@ RUN dotnet publish "TodoBackend.csproj" -c Release -o /app/publish --no-restore
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
-EXPOSE 8080
-ENTRYPOINT ["sh", "-c", "dotnet TodoBackend.dll --urls http://0.0.0.0:${PORT:-8080}"]
+# Αφαιρέσαμε το σκληρό καρφωμένο Port 80 για να ακούει στη θύρα 10000 του Render
+ENTRYPOINT ["dotnet", "TodoBackend.dll"]
